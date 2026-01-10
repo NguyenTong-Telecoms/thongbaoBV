@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách bệnh nhân</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #eef2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 48px;
+      font-weight: bold;
+      color: #001f3f;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    #scroll-box {
+      width: 95%;
+      height: 85vh;
+      overflow: hidden;
+      border: 4px solid #001f3f;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      background: #fff;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      transform: translateY(0);
+    }
+
+    thead tr {
+      background: #001f3f;
+      color: #fff;
+      font-size: 26px;
+    }
+
+    th {
+      font-weight: bold;
+      padding: 12px;
+      border: 1px solid #555;
+    }
+
+    td {
+      font-size: 24px;
+      font-weight: bold;
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    tbody tr {
+      height: 60px;
+      transition: background 0.3s;
+    }
+
+    .spacer td {
+      height: 120px;
+      border: none;
+    }
+
+    .status-dang-mo { background: #e53935; color: #fff; }
+    .status-cho-mo { background: #fdd835; color: #000; }
+    .status-mo-xong { background: #43a047; color: #fff; }
+  </style>
+</head>
+<body>
+
+<h2>BỆNH VIỆN NGUYỄN ĐÌNH CHIỂU</h2>
+
+<div id="scroll-box">
+  <table id="patient-table">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>HỌ TÊN</th>
+        <th>NGÀY SINH</th>
+        <th>QUÊ QUÁN</th>
+        <th>TRẠNG THÁI</th>
+      </tr>
+    </thead>
+    <tbody id="patient-body">
+      <!-- JS render -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const table = document.getElementById('patient-table');
+  const tbody = document.getElementById('patient-body');
+  const scrollBox = document.getElementById('scroll-box');
+  const speed = 0.5; // px/frame, điều chỉnh tốc độ
+
+  function getStatusClass(status) {
+    status = status.toLowerCase();
+    if (status === 'đang mổ') return 'status-dang-mo';
+    if (status === 'chờ mổ') return 'status-cho-mo';
+    if (status === 'mổ xong') return 'status-mo-xong';
+    return '';
+  }
+
+  let offset = 0;
+  let rowsHeight = 0;
+
+  async function loadPatients() {
+    try {
+      const res = await fetch('/api/patients');
+      const patients = await res.json();
+
+      tbody.innerHTML = '';
+
+      // spacer đầu
+      const spacerTop = document.createElement('tr');
+      spacerTop.className = 'spacer';
+      spacerTop.innerHTML = `<td colspan="5"></td>`;
+      tbody.appendChild(spacerTop);
+
+      // render danh sách
+      patients.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.className = getStatusClass(p.status);
+        tr.innerHTML = `
+          <td>${p.stt}</td>
+          <td>${p.fullName}</td>
+          <td>${p.birthDate}</td>
+          <td>${p.hometown}</td>
+          <td>${p.status.toUpperCase()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // spacer cuối
+      const spacerBottom = document.createElement('tr');
+      spacerBottom.className = 'spacer';
+      spacerBottom.innerHTML = `<td colspan="5"></td>`;
+      tbody.appendChild(spacerBottom);
+
+      // copy tất cả rows để cuộn tròn mượt
+      const clone = tbody.cloneNode(true);
+      tbody.parentNode.appendChild(clone);
+
+      // tổng chiều cao các row
+      rowsHeight = tbody.scrollHeight;
+
+    } catch(err) {
+      console.error('Không thể tải danh sách:', err);
+    }
+  }
+
+  function scrollSmooth() {
+    offset += speed;
+    if (offset >= rowsHeight) offset = 0;
+    table.style.transform = `translateY(-${offset}px)`;
+    requestAnimationFrame(scrollSmooth);
+  }
+
+  loadPatients().then(scrollSmooth);
+  setInterval(loadPatients, 5000); // tự động refresh
+</script>
+
+</body>
+</html>
