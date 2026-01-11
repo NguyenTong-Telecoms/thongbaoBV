@@ -1,9 +1,12 @@
 const { Patient } = require('../models');
+
 const ExcelJS = require('exceljs');
 
 exports.listPatients = async (req, res) => {
   try {
     const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
+
     res.render('admin', { patients, error: null });
   } catch (err) {
     console.error(err);
@@ -18,6 +21,8 @@ exports.createPatient = async (req, res) => {
     const exist = await Patient.findOne({ where: { stt } });
     if (exist) {
       const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
+
       return res.render('admin', { patients, error: '❌ SỐ THỨ TỰ ĐÃ TỒN TẠI' });
     }
 
@@ -45,6 +50,7 @@ exports.updatePatient = async (req, res) => {
     const exist = await Patient.findOne({ where: { stt, id: { $ne: id } } });
     if (exist) {
       const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
       return res.render('admin', { patients, error: '❌ SỐ THỨ TỰ ĐÃ TỒN TẠI' });
     }
 
@@ -76,18 +82,25 @@ exports.deletePatient = async (req, res) => {
   }
 };
 
+
 exports.showList = async (req, res) => {
   const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
+
   res.render('list', { patients });
 };
 
 exports.getPatientsJson = async (req, res) => {
   const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
+
   res.json(patients);
 };
 
 exports.exportExcel = async (req, res) => {
   const patients = await Patient.findAll({ order: [['stt', 'ASC']] });
+
+
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Patients');
 

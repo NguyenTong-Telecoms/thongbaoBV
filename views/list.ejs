@@ -2,37 +2,62 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Danh sách bệnh nhân</title>
+  <title>Bệnh viện Nguyễn Đình Chiểu</title>
+
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #eef2f5;
+      background: #f0f4f7;
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
       height: 100vh;
     }
 
-    h2 {
-      text-align: center;
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 10px 0;
-      font-size: 48px;
-      font-weight: bold;
-      color: #001f3f;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
 
-    #scroll-box {
-      width: 98%;
+    .header img {
+      height: 40px;
+      margin-right: 15px;
+    }
+
+    .header h2 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #1a7d1bc2;
+      margin: 0;
+    }
+
+    /* VIDEO */
+    #video-container {
+      width: 90%;
       height: 90vh;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* DANH SÁCH */
+    #scroll-box {
+      width: 99%;
+      height: 89vh;
       overflow: hidden;
-      border: 4px solid #001f3f;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
       background: #fff;
+      display: none;
       position: relative;
     }
 
@@ -40,26 +65,30 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      transform: translateY(0);
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
 
     thead tr {
-      background: #001f3f;
+      background: #261177;
       color: #fff;
-      font-size: 26px;
     }
 
     th {
-      font-weight: bold;
-      padding: 12px;
-      border: 1px solid #555;
+      font-size: 22px;
+      padding: 10px;
+      border: 1px solid #000;
     }
 
     td {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
-      padding: 12px;
-      border: 1px solid #ccc;
+      padding: 6px;
+      border: 1px solid #000;
       text-align: center;
       white-space: nowrap;
       overflow: hidden;
@@ -67,46 +96,72 @@
     }
 
     tbody tr {
-      height: 60px;
-      transition: background 0.3s;
+      height: 50px;
     }
 
     .spacer td {
-      height: 120px;
+      height: 100px;
       border: none;
     }
 
-    .status-dang-mo { background: #e53935; color: #fff; }
+    .status-dang-mo { background: #e53935; color: #000; }
     .status-cho-mo { background: #fdd835; color: #000; }
-    .status-mo-xong { background: #43a05c; color: #2a0ede; }
+    .status-mo-xong { background: #43a047; color: #000; }
   </style>
 </head>
+
 <body>
 
-<h2>BỆNH VIỆN NGUYỄN ĐÌNH CHIỂU</h2>
+<!-- HEADER -->
+<div class="header">
+  <img src="/images/logo.png" alt="Logo Bệnh viện">
+  <h2>BỆNH VIỆN NGUYỄN ĐÌNH CHIỂU</h2>
+</div>
 
+<!-- VIDEO -->
+<div id="video-container">
+  <video id="promo-video" autoplay muted playsinline>
+    <source src="/videos/video1.mp4" type="video/mp4">
+    Trình duyệt không hỗ trợ video.
+  </video>
+</div>
+
+<!-- DANH SÁCH -->
 <div id="scroll-box">
-  <table id="patient-table">
+  <table>
     <thead>
       <tr>
-        <th>STT</th>
-        <th>HỌ TÊN</th>
-        <th>NGÀY SINH</th>
-        <th>QUÊ QUÁN</th>
-        <th>TRẠNG THÁI</th>
+        <th style="width:60px">STT</th>
+        <th style="width:25%">HỌ TÊN</th>
+        <th style="width:10%">NGÀY SINH</th>
+        <th style="width:35%">QUÊ QUÁN</th>
+        <th style="width:10%">TRẠNG THÁI</th>
       </tr>
     </thead>
-    <tbody id="patient-body">
-      <!-- JS render -->
-    </tbody>
+    <tbody id="patient-body"></tbody>
   </table>
 </div>
 
 <script>
-  const table = document.getElementById('patient-table');
-  const tbody = document.getElementById('patient-body');
+  const videoContainer = document.getElementById('video-container');
+  const video = document.getElementById('promo-video');
   const scrollBox = document.getElementById('scroll-box');
-  const speed = 1.5; // px/frame, điều chỉnh tốc độ
+  const tbody = document.getElementById('patient-body');
+
+  const speed = 0.5;
+  const videos = ['/videos/video1.mp4', '/videos/video2.mp4'];
+  let currentVideo = 0;
+  let scrollAnimation;
+
+  /* FORMAT NGÀY dd/mm/yyyy */
+  function formatDateDMY(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 
   function getStatusClass(status) {
     status = status.toLowerCase();
@@ -116,63 +171,91 @@
     return '';
   }
 
-  let offset = 0;
-  let rowsHeight = 0;
-
   async function loadPatients() {
-    try {
-      const res = await fetch('/api/patients');
-      const patients = await res.json();
+    const res = await fetch('/api/patients');
+    const patients = await res.json();
+    tbody.innerHTML = '';
 
-      tbody.innerHTML = '';
+    const spacerTop = document.createElement('tr');
+    spacerTop.className = 'spacer';
+    spacerTop.innerHTML = `<td colspan="5"></td>`;
+    tbody.appendChild(spacerTop);
 
-      // spacer đầu
-      const spacerTop = document.createElement('tr');
-      spacerTop.className = 'spacer';
-      spacerTop.innerHTML = `<td colspan="5"></td>`;
-      tbody.appendChild(spacerTop);
+    patients.forEach((p, i) => {
+      const tr = document.createElement('tr');
+      tr.className = getStatusClass(p.status);
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${p.fullName}</td>
+        <td>${formatDateDMY(p.birthDate)}</td>
+        <td>${p.hometown}</td>
+        <td>${p.status.toUpperCase()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
 
-      // render danh sách
-      patients.forEach((p, i) => {
-        const tr = document.createElement('tr');
-        tr.className = getStatusClass(p.status);
-        tr.innerHTML = `
-          <td>${p.stt}</td>
-          <td>${p.fullName}</td>
-          <td>${p.birthDate}</td>
-          <td>${p.hometown}</td>
-          <td>${p.status.toUpperCase()}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    const spacerBottom = document.createElement('tr');
+    spacerBottom.className = 'spacer';
+    spacerBottom.innerHTML = `<td colspan="5"></td>`;
+    tbody.appendChild(spacerBottom);
 
-      // spacer cuối
-      const spacerBottom = document.createElement('tr');
-      spacerBottom.className = 'spacer';
-      spacerBottom.innerHTML = `<td colspan="5"></td>`;
-      tbody.appendChild(spacerBottom);
+    /* nhân đôi để cuộn vô hạn */
+    patients.forEach((p, i) => {
+      const tr = document.createElement('tr');
+      tr.className = getStatusClass(p.status);
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${p.fullName}</td>
+        <td>${formatDateDMY(p.birthDate)}</td>
+        <td>${p.hometown}</td>
+        <td>${p.status.toUpperCase()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-      // copy tất cả rows để cuộn tròn mượt
-      const clone = tbody.cloneNode(true);
-      tbody.parentNode.appendChild(clone);
+  function startScroll() {
+    let top = 0;
+    function step() {
+      top += speed;
+      if (top >= tbody.scrollHeight / 2) top = 0;
+      scrollBox.scrollTop = top;
+      scrollAnimation = requestAnimationFrame(step);
+    }
+    scrollAnimation = requestAnimationFrame(step);
+  }
 
-      // tổng chiều cao các row
-      rowsHeight = tbody.scrollHeight;
+  function stopScroll() {
+    cancelAnimationFrame(scrollAnimation);
+  }
 
-    } catch(err) {
-      console.error('Không thể tải danh sách:', err);
+  async function playLoop() {
+    while (true) {
+      /* CHẠY DANH SÁCH */
+      videoContainer.style.display = 'none';
+      scrollBox.style.display = 'block';
+
+      await loadPatients();
+      startScroll();
+
+      const duration = (tbody.scrollHeight / 2) / speed * (1000 / 60);
+      await new Promise(r => setTimeout(r, duration));
+      stopScroll();
+
+      /* CHẠY VIDEO */
+      scrollBox.style.display = 'none';
+      videoContainer.style.display = 'flex';
+
+      video.src = videos[currentVideo];
+      video.load();
+      await video.play();
+      await new Promise(r => video.onended = r);
+
+      currentVideo = (currentVideo + 1) % videos.length;
     }
   }
 
-  function scrollSmooth() {
-    offset += speed;
-    if (offset >= rowsHeight) offset = 0;
-    table.style.transform = `translateY(-${offset}px)`;
-    requestAnimationFrame(scrollSmooth);
-  }
-
-  loadPatients().then(scrollSmooth);
-  setInterval(loadPatients, 5000); // tự động refresh
+  playLoop();
 </script>
 
 </body>

@@ -20,8 +20,13 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.STRING,
       allowNull: false
-    }
+    },
+  //   isVisible: {        // thêm trường này
+  //   type: Sequelize.BOOLEAN,
+  //   defaultValue: true
+  // }
   });
+ 
 
   return Patient;
 };

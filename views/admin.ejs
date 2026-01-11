@@ -3,19 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin - Quản lý bệnh nhân</title>
+
   <style>
-    body { font-family: Arial; background: #f4f6f8; padding: 20px; }
-    h1 { text-align: center; color: #003366; }
-    form { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
-    input, select, button { padding: 8px; margin: 5px; }
-    table { width: 100%; background: white; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #003366; color: white; }
-    .error { color: red; font-weight: bold; margin-bottom: 10px; }
-    .delete { color: red; text-decoration: none; }
-    .edit { color: green; cursor: pointer; }
-    .edit-form input, .edit-form select { width: 100px; }
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      padding: 10px;
+    }
+
+    form {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    input, select, button {
+      padding: 8px;
+    }
+
+    table {
+      width: 100%;
+      background: white;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #003366;
+      color: white;
+    }
+
+    .error {
+      width: 100%;
+      color: red;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .delete {
+      color: red;
+      text-decoration: none;
+      margin-left: 8px;
+    }
+
+    .edit {
+      color: green;
+      cursor: pointer;
+    }
+
+    .edit-form input,
+    .edit-form select {
+      width: 100px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    .header img {
+      height: 40px;
+      margin-right: 15px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #1a7d1bc2;
+      margin: 0;
+    }
+
+    .btn-export {
+      background: #0d6efd;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-add {
+      background: #198754;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
   </style>
+
   <script>
     function showEditForm(id) {
       document.getElementById('display-row-' + id).style.display = 'none';
@@ -23,45 +108,57 @@
     }
   </script>
 </head>
+
 <body>
 
-<h1>QUẢN LÝ BỆNH NHÂN</h1>
+<!-- HEADER -->
+<div class="header">
+  <img src="/images/logo.png" alt="logoBV">
+  <h1>QUẢN LÝ BỆNH NHÂN</h1>
+</div>
 
-<% if (error) { %>
-  <div class="error"><%= error %></div>
-<% } %>
-
+<!-- FORM THÊM + XUẤT EXCEL -->
 <form method="POST" action="/patients">
   <input name="stt" placeholder="STT" required>
   <input name="name" placeholder="Họ tên" required>
   <input name="birth" type="date" required>
   <input name="address" placeholder="Quê quán" required>
+
   <select name="status" required>
     <option>Chờ mổ</option>
     <option>Đang mổ</option>
     <option>Đã mổ xong</option>
   </select>
-  <button type="submit">➕ Thêm bệnh nhân</button>
-</form>
 
-<a href="/patients/export"><button>📄 Xuất Excel</button></a>
+  <button class="btn-add" type="submit">➕ Thêm bệnh nhân</button>
+
+  <a href="/patients/export">
+    <button class="btn-export" type="button">📄 Xuất Excel</button>
+  </a>
+
+  <% if (error) { %>
+    <div class="error"><%= error %></div>
+  <% } %>
+</form>
 
 <hr>
 
+<!-- BẢNG DANH SÁCH -->
 <table>
   <thead>
     <tr>
-      <th>STT</th>
-      <th>Họ tên</th>
-      <th>Ngày sinh</th>
-      <th>Quê quán</th>
-      <th>Trạng thái</th>
-      <th>Hành động</th>
+      <th style="width:60px">STT</th>
+      <th style="width:15%">Họ tên</th>
+      <th style="width:10%">Ngày sinh</th>
+      <th style="width:45%">Quê quán</th>
+      <th style="width:15%">Trạng thái</th>
+      <th style="width:15%">Hành động</th>
     </tr>
   </thead>
+
   <tbody>
     <% patients.forEach(p => { %>
-      <!-- Hiển thị bình thường -->
+
       <tr id="display-row-<%= p.id %>">
         <td><%= p.stt %></td>
         <td><%= p.fullName %></td>
@@ -70,27 +167,31 @@
         <td><%= p.status %></td>
         <td>
           <span class="edit" onclick="showEditForm(<%= p.id %>)">✏️ Sửa</span>
-          <a class="delete" href="/patients/delete/<%= p.id %>" onclick="return confirm('Xóa bệnh nhân này?')">❌</a>
+          <a class="delete"
+             href="/patients/delete/<%= p.id %>"
+             onclick="return confirm('Xóa bệnh nhân này?')">❌</a>
         </td>
       </tr>
 
-      <!-- Form chỉnh sửa -->
       <tr id="edit-row-<%= p.id %>" style="display:none;">
-        <form class="edit-form" method="POST" action="/patients/update/<%= p.id %>">
-          <td><input name="stt" value="<%= p.stt %>" required></td>
-          <td><input name="name" value="<%= p.fullName %>" required></td>
-          <td><input name="birth" type="date" value="<%= p.birthDate %>" required></td>
-          <td><input name="address" value="<%= p.hometown %>" required></td>
-          <td>
+        <td colspan="6">
+          <form class="edit-form" method="POST" action="/patients/update/<%= p.id %>">
+            <input name="stt" value="<%= p.stt %>" required>
+            <input name="name" value="<%= p.fullName %>" required>
+            <input name="birth" type="date" value="<%= p.birthDate %>" required>
+            <input name="address" value="<%= p.hometown %>" required>
+
             <select name="status" required>
               <option <%= p.status === 'Chờ mổ' ? 'selected' : '' %>>Chờ mổ</option>
               <option <%= p.status === 'Đang mổ' ? 'selected' : '' %>>Đang mổ</option>
               <option <%= p.status === 'Đã mổ xong' ? 'selected' : '' %>>Đã mổ xong</option>
             </select>
-          </td>
-          <td><button type="submit">💾 Lưu</button></td>
-        </form>
+
+            <button type="submit">💾 Lưu</button>
+          </form>
+        </td>
       </tr>
+
     <% }) %>
   </tbody>
 </table>
