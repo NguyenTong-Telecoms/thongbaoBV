@@ -1,0 +1,4 @@
+git status
+git add .
+git commit -m "Cập nhật danh sách bệnh nhân"
+git push
