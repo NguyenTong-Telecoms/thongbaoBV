@@ -250,8 +250,9 @@
       video.load();
       await video.play();
       await new Promise(r => video.onended = r);
+      currentVideo = (currentVideo) % videos.length;
 
-      currentVideo = (currentVideo + 1) % videos.length;
+      // currentVideo = (currentVideo + 1) % videos.length;
     }
   }
 
